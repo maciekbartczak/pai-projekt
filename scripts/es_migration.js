@@ -20,14 +20,14 @@ function prepareRequest(path) {
     return req;
 }
 
-function loadBookData(filename, title) {
+function loadBookData(filename, path) {
     const book = fs.readFileSync(filename, {encoding: 'utf-8'});
     const content = book.split('\n');
     for (let i = 0; i < content.length; i++) {
         content[i] = content[i].trim();
     }
 
-    const path = title.toLowerCase().replace(' ', '_');
+    const title = path.toLowerCase().replace('_', ' ');
 
     return {
         path: path,
@@ -44,9 +44,6 @@ rawBooks.forEach(file => {
         parsedBooks.push(loadBookData(`./books/${file}`, title));
     }
 });
-
-
-
 
 console.log('Sending data to elasticsearch...');
 
