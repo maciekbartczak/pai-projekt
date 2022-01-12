@@ -1,0 +1,29 @@
+version: "3.0"
+
+services:
+  elasticsearch:
+    container_name: pai-es
+    image: elasticsearch:7.16.2
+    environment:
+      - "discovery.type=single-node"
+    networks:
+      - pai-net
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  kibana:
+    container_name: pai-kb
+    image: kibana:7.16.2
+    environment:
+      - ELASTICSEARCH_HOSTS=http://pai-es:9200
+    networks:
+      - pai-net
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+
+networks:
+  pai-net:
+    driver: bridge
