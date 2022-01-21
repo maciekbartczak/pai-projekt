@@ -1,46 +1,58 @@
-
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
+import lombok.val;
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Client {
     public static void main(String[] args) throws IOException {
-        RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(
-                        new HttpHost("localhost", 9200, "http")
-                ));
-        var scanner = new Scanner(System.in);
 
-        while(true) {
+        val scanner = new Scanner(System.in);
+
+        val restClient = RestClient.builder(
+                new HttpHost("localhost", 9200)
+        ).build();
+
+        val transport = new RestClientTransport(
+                restClient, new JacksonJsonpMapper()
+        );
+
+        val client = new ElasticsearchClient(transport);
+
+
+        while (true) {
             System.out.println("Input query (e to exit): ");
             var query = scanner.nextLine();
+            System.out.println(query);
             if (query.equals("e")) {
                 break;
             }
 
-            SearchRequest searchRequest = new SearchRequest("book");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.queryStringQuery(query));
-            searchSourceBuilder.size(10);
+            SearchResponse<BookSearchResult> search = client.search(s -> s
+                            .index("book")
+                            .query(q -> q
+                                    .queryString(qs -> qs
+                                            .fields(List.of("content"))
+                                            .query(query)
+                                    )),
+                    BookSearchResult.class);
 
-            searchRequest.source(searchSourceBuilder);
+            System.out.println("Found " + search.hits().hits().size() + " matches");
 
-            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
-
-            System.out.println("Total hits: " + searchResponse.getHits().getTotalHits() + "for query: " + query);
-            for (SearchHit hit : searchResponse.getHits().getHits()) {
-                System.out.println(hit.getSourceAsString());
+            for (Hit<BookSearchResult> hit : search.hits().hits()) {
+                System.out.println(hit.source().getTitle());
+                System.out.println(hit.source().getLineNumber());
+                System.out.println(hit.source().getContent());
+                System.out.println("----");
             }
         }
-        client.close();
+        restClient.close();
     }
 }
