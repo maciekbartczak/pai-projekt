@@ -1,5 +1,6 @@
 package server.user;
 
+import common.UserData;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,12 +1,11 @@
 package server;
 
 import common.BookSearchResult;
-import common.CredentialsPacketContent;
 import common.Packet;
 import common.SearchPacketContent;
+import common.UserData;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import server.user.UserData;
 import server.user.UserDataEntries;
 import server.user.UserRepository;
 
@@ -65,9 +64,9 @@ public class ClientHandler extends Thread {
     }
 
     private void handleLoginPacket(Packet packet, ObjectOutputStream output) throws IOException {
-        val content = (CredentialsPacketContent) packet.content;
+        val content = (UserData) packet.content;
         val users = userRepository.findAll().getUserDataEntry();
-        val user = new UserData(content.userData.getUsername(), content.userData.getPassword());
+        val user = new UserData(content.getUsername(), content.getPassword());
         if (matchCredentials(users, user)) {
             this.authenticated = true;
             output.writeObject("Logged in!");
@@ -87,10 +86,10 @@ public class ClientHandler extends Thread {
     }
 
     private void handleRegisterPacket(Packet packet, ObjectOutputStream output) throws IOException {
-        val content = (CredentialsPacketContent) packet.content;
+        val content = (UserData) packet.content;
         val users = Optional.ofNullable(userRepository.findAll().getUserDataEntry())
                 .orElse(new ArrayList<>());
-        val newUser = new UserData(content.userData.getUsername(), content.userData.getPassword());
+        val newUser = new UserData(content.getUsername(), content.getPassword());
         if (users.contains(newUser)) {
             output.writeObject("User exists!");
             return;

@@ -1,15 +1,12 @@
 package server;
 
 import lombok.val;
-import server.user.UserData;
-import server.user.UserDataEntries;
 import server.user.UserRepository;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 
 public class Server {
     public static void main(String[] args) throws IOException {

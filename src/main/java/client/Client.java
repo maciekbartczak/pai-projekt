@@ -1,12 +1,13 @@
 package client;
 
-import common.CredentialsPacketContent;
 import common.Packet;
 import common.SearchPacketContent;
+import common.UserData;
 import lombok.val;
-import server.user.UserData;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 import java.util.Scanner;
@@ -47,7 +48,7 @@ public class Client {
             System.out.print("Password: ");
             val password = scanner.nextLine();
             val userData = new UserData(username, password);
-            val packet = new Packet(Packet.PacketType.REGISTER, new CredentialsPacketContent(userData));
+            val packet = new Packet(Packet.PacketType.REGISTER, userData);
             output.writeObject(packet);
 
             String response = (String) input.readObject();
@@ -58,7 +59,7 @@ public class Client {
             System.out.print("Password: ");
             val password = scanner.nextLine();
             val userData = new UserData(username, password);
-            val packet = new Packet(Packet.PacketType.LOGIN, new CredentialsPacketContent(userData));
+            val packet = new Packet(Packet.PacketType.LOGIN, userData);
             output.writeObject(packet);
 
             String response = (String) input.readObject();
