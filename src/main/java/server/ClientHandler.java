@@ -1,15 +1,23 @@
 package server;
 
 import common.BookSearchResult;
+import common.CredentialsPacketContent;
 import common.Packet;
 import common.SearchPacketContent;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import server.user.UserData;
+import server.user.UserDataEntries;
+import server.user.UserRepository;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -17,7 +25,8 @@ public class ClientHandler extends Thread {
 
     private final Socket socket;
     private final ElasticSearchWrapper elasticSearchWrapper;
-
+    private final UserRepository userRepository;
+    private boolean authenticated = false;
 
     @Override
     public void run() {
@@ -29,11 +38,17 @@ public class ClientHandler extends Thread {
             while((packet = (Packet) input.readObject()) != null) {
                 switch (packet.type) {
                     case REGISTER:
+                        handleRegisterPacket(packet, output);
                         break;
                     case LOGIN:
+                        handleLoginPacket(packet, output);
                         break;
                     case SEARCH:
-                        handleSearchPacket(packet, output);
+                        if (!authenticated) {
+                            output.writeObject("Log in to do that!");
+                        } else {
+                            handleSearchPacket(packet, output);
+                        }
                         break;
                 }
             }
@@ -47,6 +62,42 @@ public class ClientHandler extends Thread {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void handleLoginPacket(Packet packet, ObjectOutputStream output) throws IOException {
+        val content = (CredentialsPacketContent) packet.content;
+        val users = userRepository.findAll().getUserDataEntry();
+        val user = new UserData(content.userData.getUsername(), content.userData.getPassword());
+        if (matchCredentials(users, user)) {
+            this.authenticated = true;
+            output.writeObject("Logged in!");
+        } else {
+            output.writeObject("Username or password invalid!");
+        }
+    }
+
+    private boolean matchCredentials(List<UserData> users, UserData user) {
+        for (UserData userData : users) {
+            if (Objects.equals(userData.getUsername(), user.getUsername())
+            && Objects.equals(userData.getPassword(), user.getPassword())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void handleRegisterPacket(Packet packet, ObjectOutputStream output) throws IOException {
+        val content = (CredentialsPacketContent) packet.content;
+        val users = Optional.ofNullable(userRepository.findAll().getUserDataEntry())
+                .orElse(new ArrayList<>());
+        val newUser = new UserData(content.userData.getUsername(), content.userData.getPassword());
+        if (users.contains(newUser)) {
+            output.writeObject("User exists!");
+            return;
+        }
+        users.add(newUser);
+        userRepository.saveAll(new UserDataEntries(users));
+        output.writeObject("Registered! Now you can log in.");
     }
 
     private void handleSearchPacket(Packet packet, ObjectOutputStream output) throws IOException {
