@@ -1,6 +1,8 @@
 package server;
 
 import lombok.val;
+import server.elastic.ElasticSearchWrapper;
+import server.elastic.ElasticsearchClientFactory;
 import server.user.UserRepository;
 
 import java.io.IOException;

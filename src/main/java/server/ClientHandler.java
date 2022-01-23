@@ -1,11 +1,9 @@
 package server;
 
-import common.BookSearchResult;
-import common.Packet;
-import common.SearchPacketContent;
-import common.UserData;
+import common.*;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import server.elastic.ElasticSearchWrapper;
 import server.user.UserDataEntries;
 import server.user.UserRepository;
 
@@ -49,6 +47,11 @@ public class ClientHandler extends Thread {
                             handleSearchPacket(packet, output);
                         }
                         break;
+                    case REMIND_PASSWORD:
+                        handleRemindPasswordPacket(packet, output);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + packet.type);
                 }
             }
 
@@ -60,6 +63,21 @@ public class ClientHandler extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void handleRemindPasswordPacket(Packet packet, ObjectOutputStream output) throws IOException {
+        val content = (RemindPasswordPacketContent) packet.content;
+        val users = userRepository.findAll().getUserDataEntry();
+        val foundPassword = users.stream()
+                .filter(userData -> userData.getUsername().equals(content.username))
+                .map(UserData::getPassword)
+                .collect(Collectors.joining());
+
+        if (foundPassword.equals("")) {
+            output.writeObject("User doesn't exist");
+        } else {
+            output.writeObject("Your password: " + foundPassword);
         }
     }
 

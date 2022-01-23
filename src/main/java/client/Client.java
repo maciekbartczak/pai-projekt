@@ -1,6 +1,7 @@
 package client;
 
 import common.Packet;
+import common.RemindPasswordPacketContent;
 import common.SearchPacketContent;
 import common.UserData;
 import lombok.val;
@@ -41,6 +42,7 @@ public class Client {
     private static void userAuthenticate() throws IOException, ClassNotFoundException {
         System.out.println("1. Register");
         System.out.println("2. Login");
+        System.out.println("3. Remind password");
         val choice = scanner.nextLine();
         if (choice.equals("1")) {
             System.out.print("Username: ");
@@ -67,6 +69,14 @@ public class Client {
             if (response.equals("Logged in!")) {
                 authenticated = true;
             }
+        } else if (choice.equals("3")) {
+            System.out.print("Username: ");
+            val username = scanner.nextLine();
+            val packet = new Packet(Packet.PacketType.REMIND_PASSWORD, new RemindPasswordPacketContent(username));
+
+            output.writeObject(packet);
+
+            System.out.println(input.readObject());
         } else {
             System.out.println("Unknown option!");
         }

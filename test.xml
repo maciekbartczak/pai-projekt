@@ -3,4 +3,8 @@
     <username>maciek</username>
     <password>maciek</password>
   </userDataEntry>
+  <userDataEntry>
+    <username>adam</username>
+    <password>password</password>
+  </userDataEntry>
 </UserDataEntries>

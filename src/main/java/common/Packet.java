@@ -13,6 +13,7 @@ public class Packet implements Serializable {
     public enum PacketType {
         REGISTER,
         LOGIN,
-        SEARCH
+        SEARCH,
+        REMIND_PASSWORD
     }
 }

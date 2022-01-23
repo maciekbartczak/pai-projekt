@@ -11,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDataEntries {
-    private List<UserData> userDataEntry;
+    private List<UserData> UserDataEntry;
 }
